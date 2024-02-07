@@ -1,0 +1,68 @@
+def solution(puzzle):
+    goal = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    
+    def is_solved(board): 
+        return all(board[i][j] == goal[i][j] for i in range(3) for j in range(3))
+        
+    def apply_moves(board, move):
+        direction, index = move
+        if direction == 'H': # shifts the elements of the row one position to the right
+            board[index - 1] = board[index - 1][-1:] + board[index - 1][:-1]
+        elif direction == 'V': # shifts the element downwards 
+            column = [board[i][index - 1] for i in range(3)]
+            column = column[-1:] + column[:-1]
+            # Extracts the column at the given index and shifts its elements one position downwards
+            for i in range(3): # Updates the corresponding elements in the board with the shifted column
+                board[i][index - 1] = column[i]
+                
+    def get_moves(board, visited):
+        moves = []
+        for direction in ['H', 'V']: 
+            for index in range(1, 4):
+                move = (direction, index)
+                alt_board = [row[:] for row in board] # create a copy of the current board
+                apply_moves(alt_board, move) # apply the move to the temporary board
+                temp_tuple = tuple(tuple(row) for row in alt_board) # changes the temporary board to a tuple
+                if temp_tuple not in visited: 
+                    moves.append(move)# if not visited, add the move to the list of possible moves
+        return moves
+    def bfs(start_board):
+        queue = [(start_board, [])] #queue will store board configurations along with the path taken to reach them
+        visited = set()
+        visited.add(tuple(tuple(row) for row in start_board))
+        
+        while queue:
+            current_board, path = queue.pop(0)
+            
+            if is_solved(current_board):
+                return path
+            
+            for move in get_moves(current_board, visited): #goes through the possible moves
+                alt_board = [row[:] for row in current_board]
+                apply_moves(alt_board, move)
+                temp_tuple = tuple(tuple(row) for row in alt_board)
+                visited.add(temp_tuple)
+                queue.append((alt_board, path + [move]))
+        
+        return None
+
+    result = bfs(puzzle)
+    
+    if result is not None:
+        print(len(result), end=' ')
+        print(''.join([f"{move[0]}{move[1]}" for move in result]))
+    else:
+        print('Not solvable')
+
+
+# Read input until '0' is encountered
+while True:
+    puzzle = []
+    for _ in range(3):
+        row = list(map(int, input().split()))
+        puzzle.append(row)
+    
+    if puzzle == [[0, 0, 0], [0, 0, 0], [0, 0, 0]]:
+        break
+    
+    solution(puzzle)
