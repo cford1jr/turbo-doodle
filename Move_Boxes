@@ -1,0 +1,91 @@
+#include <iostream>
+#include <vector>
+#include <deque>
+#include <set>
+#include <climits>
+
+using namespace std;
+
+int height, width;
+vector<pair<int, int>> target_positions;
+
+int min_time_to_move_boxes(vector<string>& grid) {
+    vector<pair<int, int>> directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}}; // right, down, left, up
+
+    auto is_valid_move = [](int x, int y) {
+        return 0 <= x && x < height && 0 <= y && y < width;
+    };
+
+    auto bfs = [&](pair<int, int> box_start, pair<int, int> target) {
+        set<pair<int, int>> visited;
+        deque<pair<pair<int, int>, int>> queue = {{{box_start}, 0}};
+
+        while (!queue.empty()) {
+            auto front = queue.front();
+            pair<int, int> pos = front.first;
+            int steps = front.second;
+            queue.pop_front();
+
+            if (pos == target)
+                return steps;
+
+            for (auto direction : directions) {
+                int dx = direction.first;
+                int dy = direction.second;
+                
+                int nx = pos.first + dx;
+                int ny = pos.second + dy;
+
+                if (is_valid_move(nx, ny) && grid[nx][ny] != '#' && !visited.count({nx, ny})) {
+                    visited.insert({nx, ny});
+                    queue.push_back({{nx, ny}, steps + 1});
+                }
+            }
+        }
+        return INT_MAX;
+    };
+
+    int total_time = 0;
+
+    for (int i = 0; i < height; ++i) {
+        for (int j = 0; j < width; ++j) {
+            if (grid[i][j] == 'B') {
+                auto box_start = make_pair(i, j);
+                auto target = target_positions.front();
+                target_positions.erase(target_positions.begin());
+                int time_to_target = bfs(box_start, target);
+                total_time += time_to_target;
+            }
+        }
+    }
+
+    return total_time;
+}
+
+int main() {
+    int test_cases;
+    cin >> test_cases;
+
+    for (int t = 0; t < test_cases; ++t) {
+        cin >> height >> width;
+        vector<string> grid(height);
+        
+        for (int i = 0; i < height; ++i) {
+            cin >> grid[i];
+        }
+
+        target_positions.clear();
+        for (int i = 0; i < height; ++i) {
+            for (int j = 0; j < width; ++j) {
+                if (grid[i][j] == 'X') {
+                    target_positions.push_back({i, j});
+                }
+            }
+        }
+
+        int result = min_time_to_move_boxes(grid);
+        cout << result << endl;
+    }
+
+    return 0;
+}
